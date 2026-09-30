@@ -10,6 +10,7 @@ import { ColorWheel } from './color-wheel.js';
 import { ImageExtractor } from './image-extractor.js';
 import { UIPreview } from './ui-preview.js';
 import { StorageExporter } from './storage-export.js';
+import { i18n } from './i18n.js';
 
 class App {
   constructor() {
@@ -42,11 +43,35 @@ class App {
     this.initExtractor();
     this.initUIPreview();
     this.bindDOMEvents();
+    this.updateUiTranslations();
     this.renderSwatches();
     this.renderContrastMatrix();
     this.renderSavedLibrary();
 
-    this.showToast('Welcome to ChromaCraft Studio!');
+    this.showToast(i18n.get('welcomeToast'));
+  }
+
+  updateUiTranslations() {
+    const langBtnText = document.getElementById('lang-toggle-text');
+    if (langBtnText) {
+      langBtnText.textContent = i18n.currentLang === 'en' ? 'ES' : 'EN';
+    }
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (key) el.textContent = i18n.get(key);
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.dataset.i18nPlaceholder;
+      if (key) el.placeholder = i18n.get(key);
+    });
+
+    // Update modal buttons
+    const btnCopyCode = document.getElementById('btn-copy-code');
+    const btnDownload = document.getElementById('btn-download-file');
+    if (btnCopyCode) btnCopyCode.textContent = i18n.get('copyToClipboardBtn');
+    if (btnDownload) btnDownload.textContent = i18n.get('downloadFileBtn');
   }
 
   updatePalette() {
@@ -381,6 +406,17 @@ class App {
   }
 
   bindDOMEvents() {
+    // Language Toggle Button
+    const btnLangToggle = document.getElementById('btn-lang-toggle');
+    if (btnLangToggle) {
+      btnLangToggle.addEventListener('click', () => {
+        const nextLang = i18n.currentLang === 'en' ? 'es' : 'en';
+        i18n.setLanguage(nextLang);
+        this.updateUiTranslations();
+        this.showToast(nextLang === 'es' ? '¡Idioma cambiado a Español!' : 'Language switched to English!');
+      });
+    }
+
     // Navigation Tabs
     const tabs = document.querySelectorAll('.nav-tab');
     tabs.forEach(tab => {
