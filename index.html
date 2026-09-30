@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChromaCraft Studio - Advanced Color Palette & Harmony Generator</title>
+  <meta name="description" content="Professional Adobe Color alternative for generating color palettes, 2D visual color wheel harmonies, WCAG contrast accessibility checking, image color extraction, live UI mockup previews, and multi-format exports.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Application Header -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <span class="logo-dot dot-1"></span>
+        <span class="logo-dot dot-2"></span>
+        <span class="logo-dot dot-3"></span>
+        <span class="logo-dot dot-4"></span>
+      </div>
+      <div class="logo-text">
+        <span class="brand-title">ChromaCraft</span>
+        <span class="brand-subtitle">Studio</span>
+      </div>
+    </div>
+
+    <!-- Quick Action Controls -->
+    <div class="header-actions">
+      <button id="btn-eyedropper" class="btn btn-secondary" title="Pick color from screen (Eyedropper API)">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2l4 4L7 17H3v-4L14 2z"/><path d="M12 4l4 4"/><path d="M3 21h18"/></svg>
+        <span>Eyedropper</span>
+      </button>
+
+      <button id="btn-randomize" class="btn btn-secondary" title="Generate Random Palette (Shortcut: Space)">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+        <span>Randomize</span>
+      </button>
+
+      <button id="btn-save" class="btn btn-secondary" title="Save Palette to Library (Ctrl+S)">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span>Save</span>
+      </button>
+
+      <button id="btn-export" class="btn btn-primary" title="Export Palette Code & Assets">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export Palette</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="app-nav">
+    <div class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-tab="tab-wheel" role="tab" aria-selected="true">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Color Wheel & Harmony</span>
+      </button>
+      
+      <button class="nav-tab" data-tab="tab-contrast" role="tab" aria-selected="false">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20z"/></svg>
+        <span>Accessibility & Contrast</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-extractor" role="tab" aria-selected="false">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Image Palette Extractor</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-mockup" role="tab" aria-selected="false">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Live UI Playground</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-library" role="tab" aria-selected="false">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Saved Palettes</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Application Content Body -->
+  <main class="app-main">
+
+    <!-- Active Swatches Bar (Persists across tabs) -->
+    <section class="active-swatches-section">
+      <div class="swatches-container" id="swatches-container">
+        <!-- 5 Swatch Cards generated dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 1: Color Wheel & Harmony View -->
+    <section id="tab-wheel" class="tab-content active">
+      <div class="wheel-workspace">
+        
+        <!-- Harmony Sidebar Controls -->
+        <aside class="harmony-sidebar glass-panel">
+          <h2 class="section-title">Color Harmony</h2>
+
+          <div class="form-group">
+            <label for="harmony-select">Harmony Rule</label>
+            <select id="harmony-select" class="form-control">
+              <option value="analogous" selected>Analogous</option>
+              <option value="monochromatic">Monochromatic</option>
+              <option value="triadic">Triadic</option>
+              <option value="complementary">Complementary</option>
+              <option value="split-complementary">Split-Complementary</option>
+              <option value="tetradic">Tetradic (Square)</option>
+              <option value="shades">Shades & Tints</option>
+              <option value="double-complementary">Double Complementary</option>
+              <option value="custom">Custom (Freeform)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="base-color-input">Base Color</label>
+            <div class="color-picker-input-group">
+              <input type="color" id="base-color-picker" value="#3B82F6">
+              <input type="text" id="base-color-hex" value="#3B82F6" class="form-control hex-input" spellcheck="false" maxlength="7">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="base-sat-slider">Base Saturation (<span id="base-sat-val">100%</span>)</label>
+            <input type="range" id="base-sat-slider" min="0" max="100" value="100" class="slider">
+          </div>
+
+          <div class="form-group">
+            <label for="base-light-slider">Base Lightness (<span id="base-light-val">50%</span>)</label>
+            <input type="range" id="base-light-slider" min="0" max="100" value="50" class="slider">
+          </div>
+
+          <div class="presets-container">
+            <label>Inspiration Presets</label>
+            <div class="preset-chips">
+              <button class="preset-chip" data-hex="#6366F1">Indigo Sunset</button>
+              <button class="preset-chip" data-hex="#10B981">Emerald Forest</button>
+              <button class="preset-chip" data-hex="#F59E0B">Amber Gold</button>
+              <button class="preset-chip" data-hex="#EC4899">Neon Pink</button>
+              <button class="preset-chip" data-hex="#06B6D4">Ocean Cyan</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Canvas Color Wheel Container -->
+        <div class="canvas-container glass-panel">
+          <div class="wheel-canvas-wrapper">
+            <canvas id="color-wheel-canvas" width="480" height="480"></canvas>
+            <div class="wheel-center-info">
+              <span class="wheel-mode-tag" id="current-harmony-tag">Analogous</span>
+              <span class="wheel-instruction">Drag nodes to adjust palette</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: Contrast & Accessibility Matrix -->
+    <section id="tab-contrast" class="tab-content">
+      <div class="contrast-workspace glass-panel">
+        <div class="contrast-header">
+          <div>
+            <h2 class="section-title">WCAG 2.1 Accessibility Matrix</h2>
+            <p class="section-desc">Evaluate contrast ratios between every color pair in your active palette according to Web Content Accessibility Guidelines (WCAG 2.1).</p>
+          </div>
+
+          <div class="contrast-options">
+            <label for="color-blindness-select">Simulation Mode:</label>
+            <select id="color-blindness-select" class="form-control select-sm">
+              <option value="normal" selected>Normal Vision</option>
+              <option value="protanopia">Protanopia (Red-Blind)</option>
+              <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
+              <option value="tritanopia">Tritanopia (Blue-Blind)</option>
+              <option value="achromatopsia">Achromatopsia (Monochromacy)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Matrix Grid Table -->
+        <div class="table-responsive">
+          <table class="contrast-matrix-table" id="contrast-matrix-table">
+            <!-- Rendered dynamically -->
+          </table>
+        </div>
+
+        <!-- Typography Preview Cards -->
+        <div class="contrast-previews" id="contrast-previews">
+          <!-- Text preview cards rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Image Palette Extractor -->
+    <section id="tab-extractor" class="tab-content">
+      <div class="extractor-workspace glass-panel">
+        <div class="extractor-sidebar">
+          <h2 class="section-title">Extract Palette from Image</h2>
+          <p class="section-desc">Upload or drag an image into the dropzone to automatically extract vibrant palette colors, or drag the color sampler pins over the image.</p>
+          
+          <div class="dropzone" id="image-dropzone">
+            <svg class="icon dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Click or drag image file here</span>
+            <small>Supports JPG, PNG, WEBP, SVG</small>
+            <input type="file" id="image-file-input" accept="image/*" class="visually-hidden">
+          </div>
+
+          <div class="sample-images-container">
+            <label>Or try sample images:</label>
+            <div class="sample-thumbs" id="sample-thumbs">
+              <button class="sample-btn" data-type="gradient1" style="background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #FFE66D);"></button>
+              <button class="sample-btn" data-type="gradient2" style="background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);"></button>
+              <button class="sample-btn" data-type="gradient3" style="background: linear-gradient(135deg, #8E2DE2, #4A00E0);"></button>
+            </div>
+          </div>
+
+          <button id="btn-use-extracted" class="btn btn-primary btn-block">
+            <span>Apply Extracted Palette to Wheel</span>
+          </button>
+        </div>
+
+        <div class="extractor-viewport">
+          <div class="image-canvas-wrapper" id="image-canvas-wrapper">
+            <canvas id="extractor-canvas"></canvas>
+            <div id="pin-overlay-container"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Live UI Mockup Playground -->
+    <section id="tab-mockup" class="tab-content">
+      <div class="mockup-workspace">
+        <div class="mockup-controls glass-panel">
+          <h2 class="section-title">UI Layout Preview</h2>
+          <p class="section-desc">See your color palette applied to a realistic web dashboard & app layout.</p>
+          
+          <div class="mockup-theme-roles">
+            <div class="role-group">
+              <label>Primary Background</label>
+              <select class="form-control role-select" data-role="bg">
+                <option value="0">Swatch 1</option>
+                <option value="1">Swatch 2</option>
+                <option value="2">Swatch 3</option>
+                <option value="3">Swatch 4</option>
+                <option value="4" selected>Swatch 5</option>
+              </select>
+            </div>
+
+            <div class="role-group">
+              <label>Surface / Card</label>
+              <select class="form-control role-select" data-role="surface">
+                <option value="0">Swatch 1</option>
+                <option value="1">Swatch 2</option>
+                <option value="2">Swatch 3</option>
+                <option value="3" selected>Swatch 4</option>
+                <option value="4">Swatch 5</option>
+              </select>
+            </div>
+
+            <div class="role-group">
+              <label>Primary Brand / Action</label>
+              <select class="form-control role-select" data-role="primary">
+                <option value="0">Swatch 1</option>
+                <option value="1">Swatch 2</option>
+                <option value="2" selected>Swatch 3 (Base)</option>
+                <option value="3">Swatch 4</option>
+                <option value="4">Swatch 5</option>
+              </select>
+            </div>
+
+            <div class="role-group">
+              <label>Secondary Accent</label>
+              <select class="form-control role-select" data-role="accent">
+                <option value="0">Swatch 1</option>
+                <option value="1" selected>Swatch 2</option>
+                <option value="2">Swatch 3</option>
+                <option value="3">Swatch 4</option>
+                <option value="4">Swatch 5</option>
+              </select>
+            </div>
+
+            <div class="role-group">
+              <label>Text Content</label>
+              <select class="form-control role-select" data-role="text">
+                <option value="0" selected>Swatch 1</option>
+                <option value="1">Swatch 2</option>
+                <option value="2">Swatch 3</option>
+                <option value="3">Swatch 4</option>
+                <option value="4">Swatch 5</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rendered Live UI Preview Container -->
+        <div class="mockup-viewport glass-panel" id="ui-mockup-viewport">
+          <div class="mockup-frame">
+            <header class="mockup-header">
+              <div class="mockup-logo">
+                <span class="mockup-dot"></span>
+                <span>SpectraAnalytics</span>
+              </div>
+              <nav class="mockup-links">
+                <span>Dashboard</span>
+                <span>Analytics</span>
+                <span>Projects</span>
+                <span>Settings</span>
+              </nav>
+              <button class="mockup-btn mockup-btn-primary">New Project</button>
+            </header>
+
+            <div class="mockup-body">
+              <aside class="mockup-sidebar">
+                <div class="mockup-nav-item active">Overview</div>
+                <div class="mockup-nav-item">Reports</div>
+                <div class="mockup-nav-item">Team Members</div>
+                <div class="mockup-nav-item">Integrations</div>
+              </aside>
+
+              <div class="mockup-content">
+                <div class="mockup-hero">
+                  <h1>Welcome to Spectra Dashboard</h1>
+                  <p>Real-time analytics and palette preview mockup.</p>
+                  <div class="mockup-actions">
+                    <button class="mockup-btn mockup-btn-primary">Get Started</button>
+                    <button class="mockup-btn mockup-btn-secondary">View Documentation</button>
+                  </div>
+                </div>
+
+                <div class="mockup-grid">
+                  <div class="mockup-card">
+                    <span class="card-tag">Growth</span>
+                    <div class="card-val">+34.8%</div>
+                    <p>Monthly Active Revenue</p>
+                  </div>
+                  <div class="mockup-card">
+                    <span class="card-tag">Performance</span>
+                    <div class="card-val">99.9%</div>
+                    <p>System Uptime</p>
+                  </div>
+                  <div class="mockup-card">
+                    <span class="card-tag">Users</span>
+                    <div class="card-val">12,480</div>
+                    <p>Total Registered Accounts</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Saved Palettes Library -->
+    <section id="tab-library" class="tab-content">
+      <div class="library-workspace glass-panel">
+        <div class="library-header">
+          <div>
+            <h2 class="section-title">Saved Palettes Library</h2>
+            <p class="section-desc">Access your stored color palettes, search by name, or re-load them into the studio.</p>
+          </div>
+
+          <div class="library-search">
+            <input type="text" id="library-search-input" class="form-control" placeholder="Search saved palettes...">
+          </div>
+        </div>
+
+        <div class="saved-palettes-grid" id="saved-palettes-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Export Modal -->
+  <div class="modal-overlay" id="export-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3>Export Palette</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-export-type="css">CSS Variables</button>
+        <button class="modal-tab" data-export-type="tailwind">Tailwind Config</button>
+        <button class="modal-tab" data-export-type="json">JSON</button>
+        <button class="modal-tab" data-export-type="svg">SVG File</button>
+        <button class="modal-tab" data-export-type="png">PNG Image</button>
+        <button class="modal-tab" data-export-type="url">Shareable URL</button>
+      </div>
+
+      <div class="modal-body">
+        <textarea id="export-code-box" class="form-control code-box" readonly></textarea>
+        <div id="png-preview-container" class="png-preview-box hidden"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-copy-code" class="btn btn-primary">Copy to Clipboard</button>
+        <button id="btn-download-file" class="btn btn-secondary">Download File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main JavaScript Modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
