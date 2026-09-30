@@ -54,12 +54,17 @@ class App {
   updateUiTranslations() {
     const langBtnText = document.getElementById('lang-toggle-text');
     if (langBtnText) {
-      langBtnText.textContent = i18n.currentLang === 'en' ? 'ES' : 'EN';
+      langBtnText.textContent = i18n.currentLang === 'es' ? 'ES (Español)' : 'EN (English)';
     }
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.dataset.i18n;
       if (key) el.textContent = i18n.get(key);
+    });
+
+    document.querySelectorAll('option[data-i18n]').forEach(opt => {
+      const key = opt.dataset.i18n;
+      if (key) opt.textContent = i18n.get(key);
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
@@ -72,6 +77,12 @@ class App {
     const btnDownload = document.getElementById('btn-download-file');
     if (btnCopyCode) btnCopyCode.textContent = i18n.get('copyToClipboardBtn');
     if (btnDownload) btnDownload.textContent = i18n.get('downloadFileBtn');
+
+    if (this.palette && this.palette.length > 0) {
+      this.renderSwatches();
+      this.renderContrastMatrix();
+      this.renderSavedLibrary();
+    }
   }
 
   updatePalette() {
@@ -183,23 +194,19 @@ class App {
 
     this.palette.forEach((swatch, idx) => {
       const card = document.createElement('div');
-      card.className = `swatch-card ${swatch.isBase ? 'is-base-card' : ''}`;
-
-      const lum = ColorMath.getLuminance(swatch.r, swatch.g, swatch.b);
-      const textColor = lum > 0.5 ? '#000000' : '#FFFFFF';
-
-      const cmyk = ColorMath.rgbToCmyk(swatch.r, swatch.g, swatch.b);
-      const oklch = ColorMath.rgbToOklch(swatch.r, swatch.g, swatch.b);
+      const badgeText = swatch.isBase ? i18n.get('baseBadge') : `${i18n.get('colorBadge')} ${idx + 1}`;
+      const setBaseTitle = i18n.get('setAsBaseTitle');
+      const lockTitle = swatch.locked ? i18n.get('unlockTitle') : i18n.get('lockTitle');
 
       card.innerHTML = `
         <div class="swatch-color-display" style="background-color: ${swatch.hex}; color: ${textColor};">
           <div class="swatch-top-actions">
-            <span class="swatch-badge">${swatch.isBase ? 'Base' : 'Color ' + (idx + 1)}</span>
+            <span class="swatch-badge">${badgeText}</span>
             <div style="display: flex; gap: 4px;">
-              <button class="swatch-btn-icon btn-set-base ${swatch.isBase ? 'active' : ''}" title="Set as Base Color" data-index="${idx}">
+              <button class="swatch-btn-icon btn-set-base ${swatch.isBase ? 'active' : ''}" title="${setBaseTitle}" data-index="${idx}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
               </button>
-              <button class="swatch-btn-icon btn-lock ${swatch.locked ? 'active' : ''}" title="${swatch.locked ? 'Unlock Color' : 'Lock Color'}" data-index="${idx}">
+              <button class="swatch-btn-icon btn-lock ${swatch.locked ? 'active' : ''}" title="${lockTitle}" data-index="${idx}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   ${swatch.locked 
                     ? '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' 
@@ -231,7 +238,7 @@ class App {
       const display = card.querySelector('.swatch-color-display');
       display.addEventListener('click', (e) => {
         if (e.target.closest('.swatch-btn-icon')) return;
-        this.copyToClipboard(swatch.hex, `Copied ${swatch.hex} to clipboard!`);
+        this.copyToClipboard(swatch.hex, i18n.get('copiedToast', { text: swatch.hex }));
       });
 
       // Lock toggle
@@ -239,7 +246,7 @@ class App {
       lockBtn.addEventListener('click', () => {
         swatch.locked = !swatch.locked;
         this.renderSwatches();
-        this.showToast(swatch.locked ? `Locked Color ${idx + 1}` : `Unlocked Color ${idx + 1}`);
+        this.showToast(swatch.locked ? i18n.get('lockedToast', { num: idx + 1 }) : i18n.get('unlockedToast', { num: idx + 1 }));
       });
 
       // Set as Base toggle
@@ -250,7 +257,7 @@ class App {
         this.baseHsl = { h: swatch.h, s: swatch.s, l: swatch.l };
         this.updatePalette();
         this.syncAllViews();
-        this.showToast(`Set Color ${idx + 1} as Base Color`);
+        this.showToast(i18n.get('setBaseToast', { num: idx + 1 }));
       });
 
       container.appendChild(card);
@@ -277,7 +284,7 @@ class App {
     });
 
     // Generate Table Header
-    let tableHtml = `<thead><tr><th>Background \\ Text</th>`;
+    let tableHtml = `<thead><tr><th>${i18n.get('bgTextHeader')}</th>`;
     displayColors.forEach((col, idx) => {
       tableHtml += `<th><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${col.simHex};margin-right:4px;"></span>C${idx + 1}</th>`;
     });
