@@ -179,17 +179,23 @@ export class ImageExtractor {
     const onMove = (e) => {
       if (!isDragging) return;
       const rect = this.canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const clientX = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
 
-      let x = Math.max(0, Math.min(this.canvas.width - 1, Math.round(clientX - rect.left)));
-      let y = Math.max(0, Math.min(this.canvas.height - 1, Math.round(clientY - rect.top)));
+      const scaleX = this.canvas.width / (rect.width || this.canvas.width);
+      const scaleY = this.canvas.height / (rect.height || this.canvas.height);
 
-      pinElement.style.left = `${x}px`;
-      pinElement.style.top = `${y}px`;
+      let canvasX = Math.max(0, Math.min(this.canvas.width - 1, Math.round((clientX - rect.left) * scaleX)));
+      let canvasY = Math.max(0, Math.min(this.canvas.height - 1, Math.round((clientY - rect.top) * scaleY)));
+
+      let displayX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      let displayY = Math.max(0, Math.min(rect.height, clientY - rect.top));
+
+      pinElement.style.left = `${displayX}px`;
+      pinElement.style.top = `${displayY}px`;
 
       // Read pixel RGB from canvas
-      const pixelData = this.ctx.getImageData(x, y, 1, 1).data;
+      const pixelData = this.ctx.getImageData(canvasX, canvasY, 1, 1).data;
       const r = pixelData[0];
       const g = pixelData[1];
       const b = pixelData[2];

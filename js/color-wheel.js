@@ -200,17 +200,19 @@ export class ColorWheel {
   bindEvents() {
     const getCoords = (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const clientX = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
+      const scaleX = 480 / (rect.width || 480);
+      const scaleY = 480 / (rect.height || 480);
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     };
 
     const handlePointerDown = (e) => {
       const coords = getCoords(e);
-      const clickedIdx = this.hitTest(coords.x, coords.y);
+      const clickedIdx = this.hitTest(coords.x, coords.y, !!e.touches);
       if (clickedIdx !== -1) {
         this.draggedNodeIndex = clickedIdx;
         e.preventDefault();
@@ -237,8 +239,9 @@ export class ColorWheel {
     window.addEventListener('touchend', handlePointerUp);
   }
 
-  hitTest(x, y) {
+  hitTest(x, y, isTouch = false) {
     if (!this.palette) return -1;
+    const hitRadius = isTouch ? 28 : 20;
     for (let i = 0; i < this.palette.length; i++) {
       const swatch = this.palette[i];
       const angleRad = (swatch.h * Math.PI) / 180;
@@ -248,7 +251,7 @@ export class ColorWheel {
 
       const dx = x - nx;
       const dy = y - ny;
-      if (Math.sqrt(dx * dx + dy * dy) <= 18) {
+      if (Math.sqrt(dx * dx + dy * dy) <= hitRadius) {
         return i;
       }
     }

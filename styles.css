@@ -1130,7 +1130,27 @@ input[type="color"]::-webkit-color-swatch {
 
 .hidden { display: none !important; }
 
-/* Responsive layout adjustments */
+/* Responsive layout adjustments & iPhone 17 Pro / iOS Mobile Polish */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app-header {
+    padding-top: max(0.85rem, env(safe-area-inset-top));
+  }
+}
+
+.nav-tabs {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .wheel-workspace, .extractor-workspace, .mockup-workspace {
     grid-template-columns: 1fr;
@@ -1142,10 +1162,118 @@ input[type="color"]::-webkit-color-swatch {
 
 @media (max-width: 640px) {
   .app-header {
+    padding: 0.85rem 1rem;
     flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .logo-container {
+    justify-content: center;
+  }
+
+  .header-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .header-actions .btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  .app-nav {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .app-main {
+    padding: 1rem 1rem 2rem;
     gap: 1rem;
   }
+
   .swatches-container {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+    min-height: auto;
+  }
+
+  .swatch-card {
+    flex-direction: row;
+    align-items: center;
+    min-height: 72px;
+  }
+
+  .swatch-color-display {
+    min-height: 72px;
+    width: 45%;
+    padding: 0.5rem;
+  }
+
+  .swatch-card-footer {
+    flex: 1;
+    border-top: none;
+    border-left: 1px solid var(--border-subtle);
+    padding: 0.5rem 0.75rem;
+  }
+
+  .canvas-container {
+    padding: 1rem 0.5rem;
+    min-height: auto;
+  }
+
+  .wheel-canvas-wrapper {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  #color-wheel-canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 340px;
+    touch-action: none;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  .form-control, input[type="text"], input[type="color"] {
+    font-size: 16px !important;
+  }
+
+  .contrast-workspace, .extractor-workspace, .mockup-controls, .library-workspace {
+    padding: 1rem;
+  }
+
+  .modal-card {
+    width: 95%;
+    padding: 1.25rem;
+  }
+
+  .modal-tabs {
+    gap: 0.25rem;
+  }
+
+  .modal-tab {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .mockup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mockup-body {
+    flex-direction: column;
+  }
+
+  .mockup-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: row;
+    overflow-x: auto;
   }
 }
