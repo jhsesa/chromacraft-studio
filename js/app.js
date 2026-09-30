@@ -54,7 +54,7 @@ class App {
   updateUiTranslations() {
     const langBtnText = document.getElementById('lang-toggle-text');
     if (langBtnText) {
-      langBtnText.textContent = i18n.currentLang === 'es' ? 'ES (Español)' : 'EN (English)';
+      langBtnText.textContent = i18n.currentLang === 'es' ? '🌐 EN (English)' : '🌐 ES (Español)';
     }
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -194,6 +194,12 @@ class App {
 
     this.palette.forEach((swatch, idx) => {
       const card = document.createElement('div');
+      card.className = `swatch-card ${swatch.isBase ? 'is-base-card' : ''}`;
+
+      const lum = ColorMath.getLuminance(swatch.r, swatch.g, swatch.b);
+      const textColor = lum > 0.5 ? '#000000' : '#FFFFFF';
+      const oklch = ColorMath.rgbToOklch(swatch.r, swatch.g, swatch.b);
+
       const badgeText = swatch.isBase ? i18n.get('baseBadge') : `${i18n.get('colorBadge')} ${idx + 1}`;
       const setBaseTitle = i18n.get('setAsBaseTitle');
       const lockTitle = swatch.locked ? i18n.get('unlockTitle') : i18n.get('lockTitle');
@@ -351,7 +357,7 @@ class App {
     grid.innerHTML = '';
 
     if (saved.length === 0) {
-      grid.innerHTML = `<p style="grid-column:1/-1; color:var(--text-muted); text-align:center; padding:3rem 0;">No saved palettes yet. Click "Save" in the header to store your current palette.</p>`;
+      grid.innerHTML = `<p style="grid-column:1/-1; color:var(--text-muted); text-align:center; padding:3rem 0;">${i18n.get('noSavedPalettes')}</p>`;
       return;
     }
 
@@ -399,13 +405,13 @@ class App {
 
         this.syncAllViews();
         this.switchTab('tab-wheel');
-        this.showToast(`Loaded palette "${entry.name}"`);
+        this.showToast(i18n.get('loadedToast', { name: entry.name }));
       });
 
       card.querySelector('.btn-delete-saved').addEventListener('click', () => {
         StorageExporter.deletePalette(entry.id);
         this.renderSavedLibrary();
-        this.showToast('Palette deleted from library');
+        this.showToast(i18n.get('deletedToast'));
       });
 
       grid.appendChild(card);
