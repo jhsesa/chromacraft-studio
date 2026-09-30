@@ -1352,11 +1352,6 @@ input[type="color"]::-webkit-color-swatch {
   transform: translateY(-1px);
 }
 
-.author-email .icon {
-  width: 14px;
-  height: 14px;
-}
-
 .footer-rights {
   font-size: 0.8rem;
   color: var(--text-muted);
