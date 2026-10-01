@@ -241,8 +241,18 @@ export class ColorWheel {
 
   hitTest(x, y, isTouch = false) {
     if (!this.palette) return -1;
-    const hitRadius = isTouch ? 28 : 20;
-    for (let i = 0; i < this.palette.length; i++) {
+
+    // Build list of candidates: check base node FIRST (it has a larger pin)
+    // so nearby swatches don't steal the touch on mobile.
+    const baseHitRadius = isTouch ? 36 : 22;
+    const otherHitRadius = isTouch ? 28 : 20;
+
+    const baseIdx = this.palette.findIndex(s => s.isBase);
+    const checkOrder = baseIdx !== -1
+      ? [baseIdx, ...this.palette.map((_, i) => i).filter(i => i !== baseIdx)]
+      : this.palette.map((_, i) => i);
+
+    for (const i of checkOrder) {
       const swatch = this.palette[i];
       const angleRad = (swatch.h * Math.PI) / 180;
       const dist = (swatch.s / 100) * this.radius;
@@ -251,6 +261,7 @@ export class ColorWheel {
 
       const dx = x - nx;
       const dy = y - ny;
+      const hitRadius = swatch.isBase ? baseHitRadius : otherHitRadius;
       if (Math.sqrt(dx * dx + dy * dy) <= hitRadius) {
         return i;
       }
