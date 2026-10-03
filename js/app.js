@@ -11,6 +11,7 @@ import { ImageExtractor } from './image-extractor.js';
 import { UIPreview } from './ui-preview.js';
 import { StorageExporter } from './storage-export.js';
 import { i18n } from './i18n.js';
+import { aiDetector } from './ai-detector.js';
 
 class App {
   constructor() {
@@ -22,6 +23,7 @@ class App {
     this.wheel = null;
     this.extractor = null;
     this.uiPreview = null;
+    this.latestAiAnalysis = null;
 
     this.init();
   }
@@ -82,6 +84,10 @@ class App {
       this.renderSwatches();
       this.renderContrastMatrix();
       this.renderSavedLibrary();
+    }
+
+    if (this.latestAiAnalysis) {
+      this.renderAiAnalysis(this.latestAiAnalysis);
     }
   }
 
@@ -148,9 +154,262 @@ class App {
         if (select) select.value = HARMONY_RULES.CUSTOM;
 
         this.syncAllViews();
-        this.showToast('Extracted palette applied to wheel!');
+        this.showToast(i18n.get('extractedToast'));
+      },
+      onImageReady: (canvas, extractedColors) => {
+        this.runAiSchemeDetection(canvas, extractedColors);
       }
     });
+
+    this.initGeminiModal();
+  }
+
+  async runAiSchemeDetection(canvas, extractedColors, forceDeepAi = false) {
+    const loadingState = document.getElementById('ai-loading-state');
+    const loadingText = document.getElementById('ai-loading-text');
+    const apiKey = aiDetector.getSavedApiKey();
+
+    if (forceDeepAi && apiKey) {
+      if (loadingState) {
+        loadingState.classList.remove('hidden');
+        if (loadingText) loadingText.textContent = i18n.get('deepAiAnalyzing');
+      }
+      try {
+        const analysis = await aiDetector.analyzeWithGemini(canvas, apiKey, i18n.currentLang);
+        this.latestAiAnalysis = analysis;
+        this.renderAiAnalysis(analysis);
+        this.showToast(i18n.get('aiDeepAnalysisSuccessToast'));
+      } catch (err) {
+        console.warn('Gemini AI failed, falling back to client AI:', err);
+        this.showToast(i18n.get('aiErrorFallbackToast'));
+        const analysis = aiDetector.analyzeImageClient(canvas, extractedColors);
+        this.latestAiAnalysis = analysis;
+        this.renderAiAnalysis(analysis);
+      } finally {
+        if (loadingState) loadingState.classList.add('hidden');
+      }
+    } else {
+      // Free instant client-side AI analysis
+      if (loadingState) {
+        loadingState.classList.remove('hidden');
+        if (loadingText) loadingText.textContent = i18n.get('analyzingImageAi');
+      }
+      setTimeout(() => {
+        const analysis = aiDetector.analyzeImageClient(canvas, extractedColors);
+        this.latestAiAnalysis = analysis;
+        this.renderAiAnalysis(analysis);
+        if (loadingState) loadingState.classList.add('hidden');
+      }, 150);
+    }
+  }
+
+  renderAiAnalysis(analysis) {
+    if (!analysis) return;
+
+    const elHarmony = document.getElementById('ai-detected-harmony');
+    const elConfidence = document.getElementById('ai-confidence-badge');
+    const elReasoning = document.getElementById('ai-harmony-reasoning');
+    const elMoodIcon = document.getElementById('ai-mood-icon');
+    const elMoodTitle = document.getElementById('ai-mood-title');
+    const elMoodDesc = document.getElementById('ai-mood-desc');
+    const elWarmPct = document.getElementById('ai-warm-pct');
+    const elCoolPct = document.getElementById('ai-cool-pct');
+    const elFillWarm = document.getElementById('ai-temp-fill-warm');
+    const elFillCool = document.getElementById('ai-temp-fill-cool');
+    const elContrast = document.getElementById('ai-contrast-tag');
+    const elVibrancy = document.getElementById('ai-vibrancy-tag');
+    const elStatusPill = document.getElementById('ai-status-pill');
+    const elColorsContainer = document.getElementById('ai-colors-container');
+    const elFootnote = document.getElementById('ai-engine-footnote');
+
+    if (elHarmony) {
+      const translatedRule = i18n.get(analysis.harmonyNameKey) || analysis.harmonyRule;
+      elHarmony.textContent = translatedRule.charAt(0).toUpperCase() + translatedRule.slice(1);
+    }
+    if (elConfidence) elConfidence.textContent = `${analysis.confidence}% ${i18n.get('confidenceLabel')}`;
+    if (elReasoning) elReasoning.textContent = analysis.reasoning;
+    if (elMoodIcon) elMoodIcon.textContent = analysis.moodIcon || '✨';
+    if (elMoodTitle) elMoodTitle.textContent = analysis.mood;
+    if (elMoodDesc) elMoodDesc.textContent = analysis.moodDesc;
+    if (elWarmPct) elWarmPct.textContent = `${analysis.warmPercent}%`;
+    if (elCoolPct) elCoolPct.textContent = `${analysis.coolPercent}%`;
+    if (elFillWarm) elFillWarm.style.width = `${analysis.warmPercent}%`;
+    if (elFillCool) elFillCool.style.width = `${analysis.coolPercent}%`;
+    if (elContrast) elContrast.textContent = analysis.contrastRating;
+    if (elVibrancy) elVibrancy.textContent = analysis.vibrancyRating;
+
+    if (elStatusPill) {
+      if (analysis.isDeepAi) {
+        elStatusPill.textContent = '✨ Gemini Vision AI';
+        elStatusPill.style.background = 'rgba(168, 85, 247, 0.25)';
+        elStatusPill.style.borderColor = '#A855F7';
+        elStatusPill.style.color = '#DDD6FE';
+      } else {
+        elStatusPill.textContent = 'Active (Free AI)';
+        elStatusPill.style.background = 'rgba(16, 185, 129, 0.2)';
+        elStatusPill.style.borderColor = '#10B981';
+        elStatusPill.style.color = '#6EE7B7';
+      }
+    }
+
+    if (elFootnote) {
+      elFootnote.innerHTML = analysis.isDeepAi
+        ? `<span>✨ Powered by Google Gemini Vision API (Free Multimodal AI)</span>`
+        : `<span data-i18n="builtInAiNotice">${i18n.get('builtInAiNotice')}</span>`;
+    }
+
+    if (elColorsContainer && analysis.colors) {
+      elColorsContainer.innerHTML = '';
+      analysis.colors.forEach(c => {
+        const card = document.createElement('div');
+        const isBase = c.role === 'base';
+        card.className = `ai-color-card ${isBase ? 'is-base-role' : ''}`;
+        const lum = ColorMath.getLuminance(c.r, c.g, c.b);
+        const textCol = lum > 0.5 ? '#000000' : '#FFFFFF';
+
+        let roleText = c.roleLabel || c.role;
+        if (c.role === 'base') roleText = i18n.get('roleBaseAnchor');
+        else if (c.role === 'accent') roleText = i18n.get('roleAccentCta');
+        else if (c.role === 'complement') roleText = i18n.get('roleHarmonizer');
+        else if (c.role === 'surface') roleText = i18n.get('roleSurfaceTone');
+        else if (c.role === 'detail') roleText = i18n.get('roleContrastDetail');
+
+        card.innerHTML = `
+          <div class="ai-color-card-swatch" style="background-color: ${c.hex}; color: ${textCol};">
+            <span>${c.hex}</span>
+          </div>
+          <div class="ai-color-card-info">
+            <span class="ai-color-card-name" title="${c.colorName}">${c.colorName}</span>
+            <span class="ai-color-role-badge">${roleText}</span>
+          </div>
+        `;
+        elColorsContainer.appendChild(card);
+      });
+    }
+  }
+
+  applyAiSchemaToStudio() {
+    if (!this.latestAiAnalysis || !this.latestAiAnalysis.colors) return;
+
+    const analysis = this.latestAiAnalysis;
+
+    // Apply the 5 detected colors to the active studio palette
+    this.palette = analysis.colors.map(col => {
+      const isBase = col.role === 'base';
+      return {
+        h: col.h,
+        s: col.s,
+        l: col.l,
+        r: col.r,
+        g: col.g,
+        b: col.b,
+        hex: col.hex,
+        isBase,
+        locked: false
+      };
+    });
+
+    // Ensure one base exists
+    const baseIndex = this.palette.findIndex(s => s.isBase);
+    const baseSwatch = baseIndex !== -1 ? this.palette[baseIndex] : this.palette[2];
+    if (baseIndex === -1 && this.palette[2]) this.palette[2].isBase = true;
+
+    this.baseHsl = { h: baseSwatch.h, s: baseSwatch.s, l: baseSwatch.l };
+    this.activeRule = analysis.harmonyRule;
+
+    const select = document.getElementById('harmony-select');
+    if (select) select.value = analysis.harmonyRule;
+
+    this.syncAllViews();
+    this.switchTab('tab-wheel');
+
+    const ruleName = i18n.get(analysis.harmonyNameKey) || analysis.harmonyRule;
+    this.showToast(i18n.get('aiSchemaAppliedToast', { rule: ruleName, mood: analysis.mood }));
+  }
+
+  initGeminiModal() {
+    const modal = document.getElementById('gemini-modal');
+    const btnOpen = document.getElementById('btn-open-gemini-modal');
+    const btnClose = document.getElementById('gemini-modal-close-btn');
+    const btnSave = document.getElementById('btn-save-gemini-key');
+    const btnClear = document.getElementById('btn-clear-gemini-key');
+    const inputKey = document.getElementById('gemini-api-key-input');
+    const btnToggleVis = document.getElementById('btn-toggle-key-visibility');
+    const indicatorDot = document.getElementById('gemini-indicator-dot');
+    const statusText = document.getElementById('gemini-status-text');
+
+    const updateModalStatus = () => {
+      const key = aiDetector.getSavedApiKey();
+      if (inputKey) inputKey.value = key ? '••••••••••••••••' : '';
+      if (key) {
+        if (indicatorDot) indicatorDot.className = 'status-indicator-dot active';
+        if (statusText) statusText.textContent = 'API Key Configured (Google Gemini Vision Active)';
+      } else {
+        if (indicatorDot) indicatorDot.className = 'status-indicator-dot';
+        if (statusText) statusText.textContent = 'No API key saved (Using free built-in AI)';
+      }
+    };
+
+    updateModalStatus();
+
+    if (btnOpen) {
+      btnOpen.addEventListener('click', () => {
+        updateModalStatus();
+        if (modal) modal.classList.add('active');
+      });
+    }
+
+    const closeModal = () => {
+      if (modal) modal.classList.remove('active');
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    if (btnToggleVis && inputKey) {
+      btnToggleVis.addEventListener('click', () => {
+        if (inputKey.type === 'password') {
+          inputKey.type = 'text';
+          btnToggleVis.textContent = '🔒';
+          const savedKey = aiDetector.getSavedApiKey();
+          if (savedKey) inputKey.value = savedKey;
+        } else {
+          inputKey.type = 'password';
+          btnToggleVis.textContent = '👁️';
+        }
+      });
+    }
+
+    if (btnSave && inputKey) {
+      btnSave.addEventListener('click', async () => {
+        const val = inputKey.value.trim();
+        if (val && !val.startsWith('•••')) {
+          aiDetector.saveApiKey(val);
+          this.showToast(i18n.get('geminiKeySavedToast'));
+        }
+        closeModal();
+        if (this.extractor && this.extractor.canvas) {
+          await this.runAiSchemeDetection(this.extractor.canvas, this.extractor.extractedColors, true);
+        }
+      });
+    }
+
+    if (btnClear) {
+      btnClear.addEventListener('click', () => {
+        aiDetector.saveApiKey('');
+        if (inputKey) inputKey.value = '';
+        updateModalStatus();
+        this.showToast(i18n.get('geminiKeyClearedToast'));
+        closeModal();
+        if (this.extractor && this.extractor.canvas) {
+          this.runAiSchemeDetection(this.extractor.canvas, this.extractor.extractedColors, false);
+        }
+      });
+    }
   }
 
   initUIPreview() {
@@ -615,6 +874,22 @@ class App {
         if (btnSave) btnSave.click();
       }
     });
+
+    // AI Color Scheme Actions
+    const btnApplyAi = document.getElementById('btn-apply-ai-schema');
+    if (btnApplyAi) {
+      btnApplyAi.addEventListener('click', () => this.applyAiSchemaToStudio());
+    }
+
+    const btnReanalyzeAi = document.getElementById('btn-reanalyze-ai');
+    if (btnReanalyzeAi) {
+      btnReanalyzeAi.addEventListener('click', () => {
+        if (this.extractor && this.extractor.canvas) {
+          const hasKey = !!aiDetector.getSavedApiKey();
+          this.runAiSchemeDetection(this.extractor.canvas, this.extractor.extractedColors, hasKey);
+        }
+      });
+    }
   }
 
   randomizePalette() {

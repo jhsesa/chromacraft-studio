@@ -237,6 +237,99 @@
           </div>
         </div>
       </div>
+
+      <!-- AI Color Scheme & Mood Detection Panel -->
+      <div class="ai-scheme-panel glass-panel" id="ai-scheme-panel">
+        <div class="ai-scheme-header">
+          <div class="ai-header-title-group">
+            <div class="ai-badge">
+              <span class="ai-sparkle">✨</span>
+              <span data-i18n="aiDetectorBadge">AI Color Scheme Detector</span>
+              <span class="ai-status-pill" id="ai-status-pill">Active</span>
+            </div>
+            <h3 class="ai-panel-title" data-i18n="aiDetectorTitle">Smart Color Harmony & Mood Analysis</h3>
+            <p class="ai-panel-desc" data-i18n="aiDetectorDesc">Intelligent computer vision analyzes your photo to detect its matching color harmony schema, aesthetic mood, and semantic color roles.</p>
+          </div>
+          <div class="ai-header-actions">
+            <button id="btn-open-gemini-modal" class="btn btn-secondary btn-sm" title="Configure Free Google Gemini Vision API">
+              <span data-i18n="deepAiVisionBtn">✨ Deep AI (Gemini Vision)</span>
+            </button>
+            <button id="btn-reanalyze-ai" class="btn btn-secondary btn-sm" title="Re-analyze image">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span data-i18n="reanalyzeAiBtn">Re-analyze</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Analysis Loading State -->
+        <div class="ai-loading-overlay hidden" id="ai-loading-state">
+          <div class="ai-spinner"></div>
+          <span id="ai-loading-text" data-i18n="analyzingImageAi">Analyzing image with AI...</span>
+        </div>
+
+        <!-- AI Detected Scheme Content -->
+        <div class="ai-scheme-body" id="ai-scheme-body">
+          <div class="ai-metrics-grid">
+            <!-- Harmony Rule Metric -->
+            <div class="ai-metric-card">
+              <span class="ai-metric-label" data-i18n="detectedHarmony">Detected Harmony Rule</span>
+              <div class="ai-harmony-display">
+                <span class="ai-harmony-name" id="ai-detected-harmony">Analogous</span>
+                <span class="ai-confidence-pill" id="ai-confidence-badge">94% Confidence</span>
+              </div>
+              <p class="ai-metric-subtext" id="ai-harmony-reasoning">Hues are adjacent on the color wheel, creating smooth organic harmony.</p>
+            </div>
+
+            <!-- Aesthetic Mood Metric -->
+            <div class="ai-metric-card">
+              <span class="ai-metric-label" data-i18n="aestheticMood">Aesthetic Mood</span>
+              <div class="ai-mood-display">
+                <span class="ai-mood-icon" id="ai-mood-icon">🌅</span>
+                <span class="ai-mood-title" id="ai-mood-title">Golden Hour & Warm Sunset</span>
+              </div>
+              <p class="ai-metric-subtext" id="ai-mood-desc">Radiant amber, golden glow, and rich fiery highlights.</p>
+            </div>
+
+            <!-- Color Temperature & Vibrancy Metric -->
+            <div class="ai-metric-card">
+              <span class="ai-metric-label" data-i18n="colorTemperature">Color Temperature & Contrast</span>
+              <div class="ai-temp-bar-wrapper">
+                <div class="ai-temp-labels">
+                  <span><span data-i18n="warmLabel">Warm</span> <strong id="ai-warm-pct">75%</strong></span>
+                  <span><span data-i18n="coolLabel">Cool</span> <strong id="ai-cool-pct">25%</strong></span>
+                </div>
+                <div class="ai-temp-bar">
+                  <div class="ai-temp-fill warm" id="ai-temp-fill-warm" style="width: 75%;"></div>
+                  <div class="ai-temp-fill cool" id="ai-temp-fill-cool" style="width: 25%;"></div>
+                </div>
+              </div>
+              <div class="ai-contrast-tags">
+                <span class="ai-contrast-tag" id="ai-contrast-tag">Optimal Contrast</span>
+                <span class="ai-vibrancy-tag" id="ai-vibrancy-tag">Vivid & Saturated</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detected 5-Color Scheme Swatches with Semantic Roles -->
+          <div class="ai-colors-section">
+            <h4 class="ai-colors-title">Detected Scheme Palette & Semantic Roles</h4>
+            <div class="ai-colors-row" id="ai-colors-container">
+              <!-- Swatches populated by JS -->
+            </div>
+          </div>
+
+          <!-- Apply Button Call-to-Action -->
+          <div class="ai-scheme-actions">
+            <button id="btn-apply-ai-schema" class="btn btn-primary btn-ai-apply">
+              <span class="ai-sparkle">✨</span>
+              <span data-i18n="applyAiSchemaBtn">Apply AI Schema to Wheel & Studio</span>
+            </button>
+            <div class="ai-engine-footnote" id="ai-engine-footnote">
+              <span data-i18n="builtInAiNotice">✓ Built-in AI vision engine is active (100% Free & offline)</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- TAB 4: Live UI Mockup Playground -->
@@ -424,6 +517,41 @@
       <div class="modal-footer">
         <button id="btn-copy-code" class="btn btn-primary">Copy to Clipboard</button>
         <button id="btn-download-file" class="btn btn-secondary">Download File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini Vision API Key Modal -->
+  <div class="modal-overlay" id="gemini-modal">
+    <div class="modal-card glass-panel gemini-modal-card">
+      <div class="modal-header">
+        <h3 data-i18n="geminiModalTitle">Google Gemini Vision AI (Free)</h3>
+        <button class="modal-close" id="gemini-modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body gemini-modal-body">
+        <p class="gemini-modal-desc" data-i18n="geminiModalDesc">Unlock deep generative multimodal vision analysis with your free Google Gemini API key. No credit card required.</p>
+        
+        <div class="form-group">
+          <label for="gemini-api-key-input" data-i18n="geminiKeyInputLabel">Google AI Studio API Key (Free):</label>
+          <div class="api-key-input-wrapper">
+            <input type="password" id="gemini-api-key-input" class="form-control" placeholder="AIzaSy..." spellcheck="false" autocomplete="off">
+            <button type="button" id="btn-toggle-key-visibility" class="btn-key-visibility" title="Show/Hide Key">👁️</button>
+          </div>
+          <small class="form-help">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="link-external" data-i18n="geminiKeyHelp">Get your free key in 30 seconds at aistudio.google.com (Free tier: 15 req/min)</a>
+          </small>
+        </div>
+
+        <div class="gemini-status-box" id="gemini-status-box">
+          <div class="status-indicator-dot" id="gemini-indicator-dot"></div>
+          <span id="gemini-status-text">No API key saved (Using built-in client AI)</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-clear-gemini-key" class="btn btn-secondary" data-i18n="clearKeyBtn">Remove Key</button>
+        <button id="btn-save-gemini-key" class="btn btn-primary" data-i18n="saveGeminiKeyBtn">Save Key & Analyze</button>
       </div>
     </div>
   </div>

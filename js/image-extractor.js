@@ -13,6 +13,7 @@ export class ImageExtractor {
     this.dropzone = document.getElementById('image-dropzone');
     this.fileInput = document.getElementById('image-file-input');
     this.onPaletteExtracted = options.onPaletteExtracted || (() => {});
+    this.onImageReady = options.onImageReady || (() => {});
 
     this.extractedColors = [];
     this.pins = [];
@@ -145,6 +146,7 @@ export class ImageExtractor {
     this.extractedColors = extracted;
 
     this.renderSamplerPins(extracted);
+    this.onImageReady(this.canvas, this.extractedColors);
   }
 
   renderSamplerPins(colors) {
@@ -214,7 +216,10 @@ export class ImageExtractor {
     };
 
     const onEnd = () => {
-      isDragging = false;
+      if (isDragging) {
+        isDragging = false;
+        this.onImageReady(this.canvas, this.extractedColors);
+      }
     };
 
     pinElement.addEventListener('mousedown', onStart);
